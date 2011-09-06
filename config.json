@@ -1,0 +1,8 @@
+{
+  "events": [
+    {
+      "type": "tailf",
+      "file": "/var/log/syslog"
+    }
+  ]
+}
