@@ -1,7 +1,6 @@
 /** CLIENT **/
 
 var net = require('net');
-var util = require('util');
 var spawn = require('child_process').spawn;
 var nconf = require('nconf');
 
@@ -49,6 +48,8 @@ var shutdownEventSources = function() {
     if(source) {
       source.kill();
     }
+    source = null;
+    sources[i] = null;
     delete source;
     delete sources[i];
   }
@@ -65,14 +66,14 @@ var createConnection = function() {
   connection.on("end", function() {
     console.log("Connection to '"+this.remoteAddress+"' got closed from remote");
     shutdownEventSources();
-    setTimeout(createConnection, 5000);
+    setTimeout(createConnection, 1000);
   });
 
   connection.on("error", function(error) {
-    console.info(error);
+    console.info(""+error);
     shutdownEventSources();
     if(error.code == 'ECONNREFUSED') {
-      setTimeout(createConnection, 10000);
+      setTimeout(createConnection, 1000);
     }
   });
 
