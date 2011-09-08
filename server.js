@@ -17,7 +17,11 @@ var server = net.createServer(function(socket) {
       try {
         dataObject = JSON.parse(data);
         if(dataObject.type && dataObject.type == "event") {
-          console.log("Data from " + this.remoteAddress + ": ", dataObject.payload);
+          dataObject.payload.message = dataObject.payload.message.replace(/^"|"$/g,'').replace(/^\s+|\s+$/g,'');
+          console.log("Data from " + this.remoteAddress, dataObject.payload);
+          console.log("\n\n");
+          console.log(dataObject.payload.message.match(/(\([^)]+\))|(\[[^\]]+\])|("[^"]+")/g));
+          console.log("\n\n");
           io.sockets.emit("event", {'data': dataObject.payload, 'remote': this.remoteAddress});
         }
       } catch (error) {
