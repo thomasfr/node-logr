@@ -1,0 +1,36 @@
+<!Doctype html>
+<html>
+<head>
+<title>Log Events</title>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/style.css" />
+<script>
+  var socket = io.connect();
+  $(function() {
+    var eventsEl = $('#events');
+    var eventTemplate = '<div class="event"><span class="remote">#sourceip</span><span class="type">#type</span><!--<span class="file">#file</span>--><span class="message">#message</span></div>';
+    socket.on('connect', function() {
+      //console.log("connected", arguments);
+      socket.on('event', function (eventData) {
+        var html = eventTemplate.replace(/#([a-zA-Z0-9]+)*/g,function(match, varName){
+          if(varName == "sourceip") return eventData.data.sourceIp;
+          else return eventData.payload[varName];
+        });
+        eventsEl.prepend(html);
+      });
+      socket.on('disconnect', function() {
+        //console.log('disconnect',arguments);
+      });
+    });
+  });
+</script>
+</head>
+<body>
+<div id="container">
+  <div id="events">
+
+  </div>
+</div>
+</body>
+</html>
