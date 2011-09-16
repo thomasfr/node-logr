@@ -9,12 +9,13 @@
   var socket = io.connect();
   $(function() {
     var eventsEl = $('#events');
-    var eventTemplate = '<div class="event"><span class="remote">#sourceip</span><span class="type">#type</span><!--<span class="file">#file</span>--><span class="message">#message</span></div>';
+    var eventTemplate = '<div class="event"><span class="remote">#clientip</span><span class="type">#type</span><span class="file">#file</span><span class="message">#message</span></div>';
     socket.on('connect', function() {
       //console.log("connected", arguments);
       socket.on('event', function (eventData) {
+        console.log("Event received", eventData);
         var html = eventTemplate.replace(/#([a-zA-Z0-9]+)*/g,function(match, varName){
-          if(varName == "sourceip") return eventData.data.sourceIp;
+          if(varName == "clientip") return eventData.meta.client_ip;
           else return eventData.payload[varName];
         });
         eventsEl.prepend(html);
