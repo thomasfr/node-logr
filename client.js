@@ -29,13 +29,16 @@ var initEventSources = function(connection) {
   for(i;i<l;i++) {
     source = sources[i];
     if(source.type && source.type == "tailf") {
-      var tailf = spawn("tailf", [source.file]);
+      var tailf = spawn("tailf", ['-n', '1', source.file]);
       eventSources.push(tailf);
       var sourceStream = tailf.stdout;
       sourceStream.setEncoding("UTF8");
       sourceStream.on("data", function(data) {
         connection.write(JSON.stringify(getEventMessage(source, data)));
       });  
+      tailf.stderr.on("data", function(data) {
+        console.log("Error", data.toString());
+      });
     }
   }
 }

@@ -1,54 +1,54 @@
 /** SERVER **/
 
-
 var net = require('net');
 var util = require('util');
 var fs = require('fs');
 var http = require('http');
 var io = require('socket.io');
+var nStatic = require('node-static');
 
 var server = net.createServer(function(socket) {
+
   socket.setEncoding("UTF8");
+
   socket.on("connect", function() {
     console.log(socket.remoteAddress+" connected");
   });
-  socket.on("data", function(data) {
-    if(data) {
+
+  socket.on("data", function(rawData) {
+    if(rawData) {
       try {
-        dataObject = JSON.parse(data);
-        if(dataObject.type && dataObject.type == "event") {
-          dataObject.payload.message = dataObject.payload.message.replace(/^"|"$/g,'').replace(/^\s+|\s+$/g,'');
-          console.log("Data from " + this.remoteAddress, dataObject.payload);
-          console.log("\n\n");
-          console.log(dataObject.payload.message.match(/(\([^)]+\))|(\[[^\]]+\])|("[^"]+")/g));
-          console.log("\n\n");
-          io.sockets.emit("event", {'data': dataObject.payload, 'remote': this.remoteAddress});
+        rawDataObj = JSON.parse(rawData);
+        if(rawDataObj && rawDataObj.type && rawDataObj.type == "event") {
+          var rawEventPayload = rawDataObj.payload;
+          if(rawEventPayload.message && rawEventPayload.type) {
+            var eventTypeHandler = require(rawEventPayload.type).handle;
+            var eventPayload = eventTypeHandler(rawEventPayload);
+            io.sockets.emit("event", {'payload': eventPayload, 'data': {'sourceIp': this.remoteAddress}});
+          }
         }
       } catch (error) {
-        console.info("error sending data "+error);
+        console.error("error processing data: " + error);
       }
     }
   });
+
   socket.on("end", function() {
     console.log("Client '" + this.remoteAddress + "' closed connection");
   });
+
 });
 
 
-var handler = function(req, res) {
-  fs.readFile(__dirname + '/index.html', function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading index.html');
-    }
-
-    res.writeHead(200);
-    res.end(data);
-  });
+var handler = function(request, response) {
+  request.on("end", function() {
+    file.serve(request, response);    
+  })
 }
 
+var file = new nStatic.Server('./public');
 var app = http.createServer(handler);
-app.listen(8080);
+app.listen(8000);
 var io = io.listen(app);
-server.listen(1234, '127.0.0.1');
 
+server.listen(1234, '127.0.0.1');
